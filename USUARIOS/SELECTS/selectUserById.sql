@@ -1,7 +1,8 @@
-CREATE PROCEDURE selectUserById
-@id_usuario int
-as
-begin
-	select * from usuarios where id_usuario = @id_usuario
-end
-go
+DELIMITER //
+
+CREATE PROCEDURE selectUserById(IN id_usuario INT)
+BEGIN
+    SELECT * FROM usuarios WHERE id_usuario = id_usuario;
+END //
+
+DELIMITER ;

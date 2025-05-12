@@ -1,7 +1,8 @@
-create procedure selectUserByIdRol
-@id_rol int
-as 
-begin
-	select * from usuarios where id_rol = @id_rol
-end
-go
+DELIMITER //
+
+CREATE PROCEDURE selectUserByIdRol(IN id_rol INT)
+BEGIN
+    SELECT * FROM usuarios WHERE id_rol = id_rol;
+END //
+
+DELIMITER ;

@@ -1,16 +1,15 @@
-create procedure insertAdministrador
-@id_usuario int
+DELIMITER //
+CREATE PROCEDURE insertAdministrador(IN id_usuario INT)
+BEGIN
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION 
+        BEGIN
+            SELECT 'Error al ingresar administrador' AS mensaje;
+        END;
 
-as
-begin
-	begin try
-		insert into administradores(id_usuario)
-		values (@id_usuario)
-		print 'Datos de administrador agregado correctamente'
-	end try
-	begin catch
-		print 'Error al ingresar médico'
-		print ERROR_MESSAGE();
-	end catch
-
-END
+    INSERT INTO administradores(id_usuario)
+    VALUES (id_usuario);
+    
+    SELECT 'Datos de administrador agregado correctamente' AS mensaje;
+END;
+//
+DELIMITER ;

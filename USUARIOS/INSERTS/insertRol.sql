@@ -1,14 +1,15 @@
-CREATE PROCEDURE insertRol
-AS
+DELIMITER //
+CREATE PROCEDURE insertRol()
 BEGIN
-    BEGIN TRY
-        INSERT INTO Roles (rol)
-        VALUES ('Contador'), ('Administrador'), ('Usuario corriente');
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION 
+        BEGIN
+            SELECT 'Error al agregar roles' AS mensaje;
+        END;
 
-        PRINT 'Roles creados correctamente.';
-    END TRY
-    BEGIN CATCH
-        PRINT 'Error al agregar roles:';
-        PRINT ERROR_MESSAGE(); -- Error correcto sin variable
-    END CATCH
-END
+    INSERT INTO Roles (rol)
+    VALUES ('Contador'), ('Administrador'), ('Usuario corriente');
+
+    SELECT 'Roles creados correctamente.' AS mensaje;
+END;
+//
+DELIMITER ;

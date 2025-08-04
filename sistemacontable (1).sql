@@ -68,13 +68,22 @@ CREATE TABLE Asientos (
 
 CREATE TABLE IVA_Libro (
     id_iva INT PRIMARY KEY IDENTITY(1,1),
-    id_comprobante INT NOT NULL FOREIGN KEY REFERENCES Comprobantes(id_comprobante),
+    id_comprobante INT NOT NULL,
+    id_operacion INT, -- Se permite NULL si la operación es opcional
     tipo_libro VARCHAR(10) CHECK (tipo_libro IN ('VENTAS', 'COMPRAS')),
     neto_gravado DECIMAL(12,2),
     iva_21 DECIMAL(12,2),
     iva_10_5 DECIMAL(12,2),
-    total DECIMAL(12,2)
+    total DECIMAL(12,2),
+
+    -- Claves foráneas
+    CONSTRAINT FK_IVA_Comprobantes FOREIGN KEY (id_comprobante)
+        REFERENCES Comprobantes(id_comprobante),
+
+    CONSTRAINT FK_IVA_Operaciones FOREIGN KEY (id_operacion)
+        REFERENCES Operaciones(id_operacion)
 );
+
 
 CREATE TABLE Operaciones (
     id_operacion INT PRIMARY KEY IDENTITY(1,1),

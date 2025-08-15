@@ -1,6 +1,6 @@
 
 -- =====================================
--- CREAR TABLAS BASE
+-- TABLAS BASE
 -- =====================================
 CREATE TABLE Roles (
     id_rol INT PRIMARY KEY IDENTITY(1,1),
@@ -21,29 +21,30 @@ CREATE TABLE Usuarios (
 
 CREATE TABLE Admin (
     id_admin INT PRIMARY KEY IDENTITY(1,1),
-    id_usuario INT CONSTRAINT FK_Admin_Usuarios FOREIGN KEY REFERENCES Usuarios(id_usuario)
+    id_usuario INT NOT NULL CONSTRAINT FK_Admin_Usuarios FOREIGN KEY REFERENCES Usuarios(id_usuario)
 );
 
 CREATE TABLE Contador (
     id_contador INT PRIMARY KEY IDENTITY(1,1),
-    id_usuario INT CONSTRAINT FK_Contador_Usuarios FOREIGN KEY REFERENCES Usuarios(id_usuario)
+    id_usuario INT NOT NULL CONSTRAINT FK_Contador_Usuarios FOREIGN KEY REFERENCES Usuarios(id_usuario)
 );
 
 CREATE TABLE UsuarioCorriente (
     id_usuariocorriente INT PRIMARY KEY IDENTITY(1,1),
-    id_usuario INT CONSTRAINT FK_UsuarioCorriente_Usuarios FOREIGN KEY REFERENCES Usuarios(id_usuario)
+    id_usuario INT NOT NULL CONSTRAINT FK_UsuarioCorriente_Usuarios FOREIGN KEY REFERENCES Usuarios(id_usuario)
 );
 
-CREATE TABLE Tipo_Cuenta (
-    id_tipo_cuenta INT PRIMARY KEY IDENTITY(1,1),
-    tipo_cuenta VARCHAR(50) NOT NULL
-);
-
+-- =====================================
+-- TIPOS DE SALDO
+-- =====================================
 CREATE TABLE Tipos_Saldos (
     id_tipo_saldo INT PRIMARY KEY IDENTITY(1,1),
     tipo_saldo VARCHAR(100) NOT NULL
 );
 
+-- =====================================
+-- CUENTAS
+-- =====================================
 CREATE TABLE Cuentas (
     id_cuenta INT PRIMARY KEY IDENTITY(1,1),
     codigo VARCHAR(100) UNIQUE NOT NULL,
@@ -53,10 +54,20 @@ CREATE TABLE Cuentas (
 );
 
 -- =====================================
--- COMPROBANTES CON DESCRIPCIÓN COMPLETA
+-- ASIENTOS
+-- =====================================
+CREATE TABLE Asientos (
+    id_asiento INT PRIMARY KEY IDENTITY(1,1),
+    fecha_asiento DATETIME NOT NULL,
+    descripcion TEXT NOT NULL
+);
+
+-- =====================================
+-- COMPROBANTES (FK directo a Asientos)
 -- =====================================
 CREATE TABLE Comprobantes (
     id_comprobante INT PRIMARY KEY IDENTITY(1,1),
+    id_asiento INT NOT NULL CONSTRAINT FK_Comprobantes_Asiento FOREIGN KEY REFERENCES Asientos(id_asiento),
     codigo_tipo VARCHAR(20) NOT NULL CHECK (codigo_tipo IN (
         'FACTURA_A','FACTURA_B','FACTURA_C','FACTURA_M',
         'NC_A','NC_B','NC_C','NC_M',
@@ -71,37 +82,6 @@ CREATE TABLE Comprobantes (
     monto_total DECIMAL(12,2) NOT NULL
 );
 
-
--- =====================================
--- ASIENTOS
--- =====================================
-CREATE TABLE Asientos (
-    id_asiento INT PRIMARY KEY IDENTITY(1,1),
-    fecha_asiento DATETIME NOT NULL,
-    descripcion TEXT NOT NULL,
-    id_comprobante INT FOREIGN KEY REFERENCES Comprobantes(id_comprobante)
-);
-
--- =====================================
--- ASIENTOS_COMPROBANTE
--- =====================================
-CREATE TABLE Asientos_Comprobante (
-    id_asientos_comprobante INT PRIMARY KEY IDENTITY(1,1),
-    id_asiento INT NOT NULL CONSTRAINT FK_AC_Asiento FOREIGN KEY REFERENCES Asientos(id_asiento),
-    id_comprobante INT NOT NULL CONSTRAINT FK_AC_Comprobante FOREIGN KEY REFERENCES Comprobantes(id_comprobante),
-    fecha_movimiento DATETIME NOT NULL
-);
-
--- =====================================
--- OPERACIONES
--- =====================================
-CREATE TABLE Operaciones (
-    id_operacion INT PRIMARY KEY IDENTITY(1,1),
-    descripcion VARCHAR(255) NOT NULL,
-    monto DECIMAL(12,2) NOT NULL,
-    fecha DATETIME NOT NULL
-);
-
 -- =====================================
 -- TIPO MOVIMIENTO
 -- =====================================
@@ -112,23 +92,30 @@ CREATE TABLE TipoMovimiento (
 
 INSERT INTO TipoMovimiento (nombre) VALUES ('DEBE'), ('HABER');
 
-ALTER TABLE Operaciones
-ADD id_tipo_movimiento INT NOT NULL DEFAULT 1;
-
-ALTER TABLE Operaciones
-ADD CONSTRAINT FK_Operaciones_TipoMovimiento FOREIGN KEY (id_tipo_movimiento)
-    REFERENCES TipoMovimiento(id_tipo_movimiento);
+-- =====================================
+-- OPERACIONES
+-- =====================================
+CREATE TABLE Operaciones (
+    id_operacion INT PRIMARY KEY IDENTITY(1,1),
+    id_asiento INT NOT NULL CONSTRAINT FK_Operaciones_Asiento FOREIGN KEY REFERENCES Asientos(id_asiento),
+    id_cuenta INT NOT NULL CONSTRAINT FK_Operaciones_Cuenta FOREIGN KEY REFERENCES Cuentas(id_cuenta),
+    id_tipo_movimiento INT NOT NULL CONSTRAINT FK_Operaciones_TipoMovimiento FOREIGN KEY REFERENCES TipoMovimiento(id_tipo_movimiento),
+    monto DECIMAL(12,2) NOT NULL
+);
 
 -- =====================================
 -- IVA_LIBRO
 -- =====================================
 CREATE TABLE IVA_Libro (
     id_iva INT PRIMARY KEY IDENTITY(1,1),
-    id_comprobante INT NOT NULL CONSTRAINT FK_IVA_Comprobantes FOREIGN KEY REFERENCES Comprobantes(id_comprobante),
-    id_operacion INT CONSTRAINT FK_IVA_Operaciones FOREIGN KEY REFERENCES Operaciones(id_operacion),
-    tipo_libro VARCHAR(10) CHECK (tipo_libro IN ('VENTAS', 'COMPRAS')),
-    neto_gravado DECIMAL(12,2),
-    iva_21 DECIMAL(12,2),
-    iva_10_5 DECIMAL(12,2),
-    total DECIMAL(12,2)
+    id_operacion INT NOT NULL CONSTRAINT FK_IVA_Operaciones FOREIGN KEY REFERENCES Operaciones(id_operacion),
+    tipo_libro VARCHAR(10) NOT NULL CHECK (tipo_libro IN ('VENTAS', 'COMPRAS')),
+    neto_gravado DECIMAL(12,2) NOT NULL,
+    iva_21 DECIMAL(12,2) NULL,
+    iva_10_5 DECIMAL(12,2) NULL,
+    total DECIMAL(12,2) NOT NULL,
+    CONSTRAINT CHK_IVA_Libro CHECK (
+        (iva_21 IS NOT NULL OR iva_10_5 IS NOT NULL) OR
+        (iva_21 IS NULL AND iva_10_5 IS NULL)
+    )
 );

@@ -2,7 +2,7 @@ CREATE PROCEDURE insertarOpsEnAsientos
 (
     @id_asiento INT,
     @id_cuenta INT,
-    @id_tipo_cuenta INT,
+    @id_tipo_movimiento INT,
     @neto_gravado DECIMAL(12,2),
     @tipo_libro VARCHAR(10),
     @calcular_iva_21 BIT = 0,
@@ -27,8 +27,8 @@ BEGIN
         SET @total = @neto_gravado + @iva_21 + @iva_10_5;
 
         -- Insertar operación con monto total
-        INSERT INTO Operaciones (id_asiento, id_cuenta, id_tipo_cuenta, monto)
-        VALUES (@id_asiento, @id_cuenta, @id_tipo_cuenta, @total);
+        INSERT INTO Operaciones (id_asiento, id_cuenta, id_tipo_movimiento, monto)
+        VALUES (@id_asiento, @id_cuenta, @id_tipo_movimiento, @total);
 
         DECLARE @id_operacion INT = SCOPE_IDENTITY();
 
